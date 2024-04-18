@@ -16,6 +16,7 @@ module.exports = {
     getAllProducts,
     getProductDetails,
     deleteProduct,
+    isSellerOfProduct,
 }
 
 /**
@@ -209,5 +210,38 @@ async function deleteProduct(req, res, next) {
             return next(error);
         }
         next(new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'An error occurred while deleting product details.', error.message));
+    }
+}
+
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ */
+async function isSellerOfProduct(req, res, next) {
+    try{
+        const user=req.user;
+        const userId=user.userId;
+        const productId = req.params.id;
+    
+        if (!productId) {
+            throw new ClientError(StatusCodes.BAD_REQUEST, 'Invalid input');
+        }
+        const product= await productService.getProductById(productId);
+        if (!product ) {
+            throw new ClientError(StatusCodes.BAD_REQUEST, 'Product does not exist');
+        }
+        console.log(product.user, userId)
+        if (product.user.toString() !==  userId) {
+            throw new ClientError(StatusCodes.BAD_REQUEST, 'Not the seller');
+        }
+    
+        next();  
+    } catch (error) {
+        if (error instanceof ClientError) {
+            return next(error);
+        }
+        next(new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'An error occurred while authorization.', error.message));
     }
 }

@@ -18,6 +18,7 @@ module.exports = {
     getAllProductsCount,
     deleteProductById,
     getProductDetails,
+    updateProductInventory,
   };
 
 /**
@@ -134,6 +135,21 @@ async function editProduct(id, setData, addToSetData) {
       return result;
     } catch (error) {
       throw new Error(`Error adding details to database: ${error.message}`);
+    }
+}
+
+/**
+ * 
+ * @param {*} id 
+ * @param {*} setData 
+ * @returns 
+ */
+async function updateProductInventory(id, setData) {
+    try {
+      const result = await Product.findByIdAndUpdate(id, { $inc: { version: 1, ...setData }});
+      return result;
+    } catch (error) {
+      throw new Error(`Error updating details to database: ${error.message}`);
     }
 }
 
