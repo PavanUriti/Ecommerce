@@ -4,11 +4,15 @@ const {validateFQL, getMQL} = require('../../shared/fqlparser');
 const queryFilter = require('../../shared/utils/query-builder');
 const ClientError = require('../../shared/client-error');
 const {StatusCodes} = require('http-status-codes');
+const {uploadImage} = require('../../shared/helpers/cloudinary');
+const {createTempFile, deleteFile} = require('../../shared/utils/file-operations');
 
 module.exports = {
     addProduct,
+    createProduct,
     getProductById,
     editProduct,
+    updateProduct,
     getMatchQuery,
     getAllProducts,
     getAllProductsCount,
@@ -27,6 +31,50 @@ async function addProduct(data) {
       return result._id;
     } catch (error) {
       throw new Error(`Error adding details to database: ${error.message}`);
+    }
+}
+
+/**
+ * 
+ * @param {*} data
+ * @returns 
+ */
+async function createProduct(data) {
+    try {
+
+        const imagesPromises = data.images.map(async imagePath => {
+            const { public_id, url } = await uploadImage(imagePath, { folder: 'products' });
+            return { public_id, url };
+        });
+
+        const images = await Promise.all(imagesPromises);
+        data.images = images;
+        await addProduct(data)
+    
+    } catch (error) {
+      throw new Error(`Error consuming data: ${error.message}`);
+    }
+}
+
+/**
+ * 
+ * @param {*} data
+ * @returns 
+ */
+async function updateProduct(data) {
+    try {
+
+        const imagesPromises = data.addToSetData.images.map(async imagePath => {
+            const { public_id, url } = await uploadImage(imagePath, { folder: 'products' });
+            return { public_id, url };
+        });
+
+        const images = await Promise.all(imagesPromises);
+        data.addToSetData.images = images;
+        await editProduct(data.id, data.setData, data.addToSetData)
+    
+    } catch (error) {
+      throw new Error(`Error consuming data: ${error.message}`);
     }
 }
 
@@ -134,6 +182,7 @@ async function getMatchQuery( searchTerm, filters=[]) {
  */
 async function getAllProducts(matchQuery, pageSize, pageIndex, sortParam) {
     const skipRecords = (pageSize * pageIndex) - pageSize;
+
     const result = await Product.aggregate([
         {$match: matchQuery},
         {$sort: sortParam},

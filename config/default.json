@@ -1,3 +1,4 @@
 {
-    "mongobaseUrlString": "mongodb://127.0.0.1:27017/{tenantName}"
+    "mongobaseUrlString": "mongodb://127.0.0.1:27017/{tenantName}",
+    "amqpUrlString": "amqp://guest:guest@localhost:5672/"
 }

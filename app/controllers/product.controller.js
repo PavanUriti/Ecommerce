@@ -6,6 +6,7 @@ const {uploadImage} = require('../../shared/helpers/cloudinary');
 const productService = require('../services/product.service');
 const {createTempFile, deleteFile} = require('../../shared/utils/file-operations');
 const Pagination = require('../../shared/pagination');
+const { connectToRabbitMQ, sendToQueue } = require('../../shared/helpers/amqp');
 
 const INVALID_REQUEST_BODY_FORMAT = 'Invalid Request Body Format';
 
@@ -39,16 +40,7 @@ async function addProduct(req, res, next) {
 
                 const tempFilePath = await createTempFile(file.name, file.data);
 
-                const result = await uploadImage(tempFilePath, {
-                    folder: 'products'
-                });
-
-                images.push({
-                    public_id: result.public_id,
-                    url: result.url
-                });
-
-                await deleteFile(tempFilePath);
+                images.push(tempFilePath);
             }
         }
 
@@ -56,9 +48,12 @@ async function addProduct(req, res, next) {
             name, price, description, category, seller, stock, images, user: req.user.userId
         };
 
-        const result = await productService.addProduct(data);
+        const channel = await connectToRabbitMQ();
 
-        return handleResponse(req, res, next, StatusCodes.OK, { id: result }, `Product added successfully!`, '', null);
+        // Send product creation message to queue
+        await sendToQueue('product_creation_queue', data);
+
+        return handleResponse(req, res, next, StatusCodes.OK, '', `Product added to queue successfully!`, '', null);
     } catch (error) {
         if (error instanceof ClientError) {
             return next(error);
@@ -77,11 +72,15 @@ async function addProduct(req, res, next) {
 async function editProduct(req, res, next) {
     try {
         const id = req.params.id;
-        const { name, price, description, category, seller, stock } = req.body;
+        const { name, price, description, category, seller, stock , version} = req.body;
 
         const product = await productService.getProductById(id);
         if (!product) {
             throw new ClientError(StatusCodes.BAD_REQUEST, 'Product not found.');
+        }
+
+        if (product.version !== parseInt(version)) {
+            throw new ClientError(StatusCodes.CONFLICT, 'Conflict: Product has been updated by another user');
         }
 
         let images = [];
@@ -96,16 +95,7 @@ async function editProduct(req, res, next) {
 
                 const tempFilePath = await createTempFile(file.name, file.data);
 
-                const result = await uploadImage(tempFilePath, {
-                    folder: 'products'
-                });
-
-                images.push({
-                    public_id: result.public_id,
-                    url: result.url
-                });
-
-                await deleteFile(tempFilePath);
+                images.push(tempFilePath);
             }
         }
 
@@ -114,7 +104,11 @@ async function editProduct(req, res, next) {
         };
 
         const addToSetData = { images }
-        const result = await productService.editProduct(id, setData, addToSetData);
+
+        const channel = await connectToRabbitMQ();
+
+        // Send product edit message to queue
+        await sendToQueue('product_edit_queue', { id, setData, addToSetData });
 
         return handleResponse(req, res, next, StatusCodes.OK, { id }, `Product edit successfully!`, '', null);
     } catch (error) {

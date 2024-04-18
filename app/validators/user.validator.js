@@ -20,7 +20,7 @@ function validateRegistration(user) {
         password: Joi.string().min(8).max(15).required(),
         email: Joi.string().email().max(50).required(),
         phone: Joi.string().regex(phoneRegex).allow(''),
-        role: Joi.string().valid('admin', 'customer').default('customer'),
+        role: Joi.string().valid('seller', 'customer').default('customer'),
     });
 
     return schema.validate(user);
