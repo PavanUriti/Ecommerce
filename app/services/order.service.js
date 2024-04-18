@@ -6,11 +6,13 @@ const queryFilter = require('../../shared/utils/query-builder');
 const ClientError = require('../../shared/client-error');
 const {StatusCodes} = require('http-status-codes');
 const { connectToRabbitMQ, sendToQueue } = require('../../shared/helpers/amqp');
+const {generateRandomUUID} = require('../../shared/utils/uuid');
 
 module.exports = {
     placeOrder,
     performInventoryCheck,
     updateOrderStatus,
+    markOrderAsShipped,
 }
 
 /**
@@ -34,7 +36,7 @@ async function placeOrder(data) {
 
 async function performInventoryCheck(orderId) {
     try {
-        const order = await Order.findById(orderId).populate('products');
+        const order = await Order.findById(orderId).populate(['products', 'shippingInfo', 'paymentInfo']);
         const products = order.products;
 
         for (const product of products) {
@@ -46,12 +48,25 @@ async function performInventoryCheck(orderId) {
             if (inventoryItem.stock < product.quantity) {
                 console.log(`Insufficient inventory for product: ${product.name}`);
                 await updateOrderStatus(orderId, 'Cancelled');
+                return;
             } else {
-                await productService.updateProductInventory(product.product,  { stock: -product.quantity })
                 console.log(`Sufficient inventory for product: ${product.name}`);
-                await updateOrderStatus(orderId, 'Confirmed');
             }
         }
+
+        const updatePromises = products.map(async product => {
+            const result = await productService.updateProductInventory(product.product,  { stock: -product.quantity })
+            return result;
+        });
+
+       await Promise.all(updatePromises);
+
+       await updateOrderStatus(orderId, 'Confirmed');
+
+       const trackingNumber = generateRandomUUID();
+       const message = { orderId, trackingNumber, shippingInfo: order.shippingInfo, paymentInfo: order.paymentInfo};
+       await sendToQueue('order_shipping_queue', message);
+       console.log(`Shipping initiated for product with trackingNumber: ${trackingNumber}`);
 
         return true; 
     } catch (error) {
@@ -67,6 +82,19 @@ async function performInventoryCheck(orderId) {
 async function updateOrderStatus(id, status) {
     try {
         await Order.findByIdAndUpdate(id, { $set: {status: status}});
+    } catch (error) {
+        throw new Error('Failed to update status', error);
+    }
+}
+
+/**
+ * 
+ * @param {*} id 
+ * @param {*} status 
+ */
+async function markOrderAsShipped(id) {
+    try {
+        await updateOrderStatus(id, 'Shipped');
     } catch (error) {
         throw new Error('Failed to update status', error);
     }

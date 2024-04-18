@@ -51,7 +51,24 @@ async function startOrderConsumer() {
 
                 console.log('Inventory check completed for Order:', data.orderId);
             } catch (error) {
-                console.error('Error creating product:', error);
+                console.error('Error product Inventory check:', error);
+            }
+        });
+
+        consumeFromQueue('order_shipping_queue', async function (data) {
+            try {
+                const { orderId, trackingNumber } = data;
+
+                // Perform shipping process 
+                console.log(`Shipping order ${orderId} with tracking number: ${trackingNumber}`);
+
+                await orderService.markOrderAsShipped(orderId);
+
+                // Notify customer about the shipment
+
+                console.log(`Order ${orderId} marked as Shipped with tracking number: ${trackingNumber}`);
+            } catch (error) {
+                console.error('Error processing shipping:', error);
             }
         });
 

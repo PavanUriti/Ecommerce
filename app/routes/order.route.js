@@ -7,4 +7,4 @@ module.exports = orderRouter;
 
 // orderRouter.post('/get', customerOnly, orderController.getAllOrders);
 orderRouter.post('/', customerOnly, orderController.placeOrder);
-// orderRouter.delete('/:id', customerOnly, orderController.cancelOrder);
+orderRouter.delete('/:id', customerOnly, orderController.cancelOrder);
