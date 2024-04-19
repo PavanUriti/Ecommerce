@@ -1,9 +1,9 @@
 const express = require('express');
 const path = require('path');
 
-const userRouter = require('../app/routes/user.route');
-const productRouter = require('../app/routes/product.route');
-const orderRouter = require('../app/routes/order.route');
+const userRouter = require('./routes/user.route');
+const productRouter = require('./routes/product.route');
+const orderRouter = require('./routes/order.route');
 
 /**
  * All the routes will go here

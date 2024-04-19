@@ -1,12 +1,12 @@
-const ClientError = require('../../shared/client-error');
-const handleResponse = require('../../shared/responsehandler');
-const ServerError = require('../../shared/server-error');
+const ClientError = require('../../../common/shared/client-error');
+const handleResponse = require('../../../common/shared/responsehandler');
+const ServerError = require('../../../common/shared/server-error');
 const {StatusCodes} = require('http-status-codes');
-const {uploadImage} = require('../../shared/helpers/cloudinary');
+const {uploadImage} = require('../../../common/shared/helpers/cloudinary');
 const productService = require('../services/product.service');
-const {createTempFile, deleteFile} = require('../../shared/utils/file-operations');
-const Pagination = require('../../shared/pagination');
-const { connectToRabbitMQ, sendToQueue } = require('../../shared/helpers/amqp');
+const {createTempFile, deleteFile} = require('../../../common/shared/utils/file-operations');
+const Pagination = require('../../../common/shared/pagination');
+const { connectToRabbitMQ, sendToQueue } = require('../../../common/shared/helpers/amqp');
 
 const INVALID_REQUEST_BODY_FORMAT = 'Invalid Request Body Format';
 

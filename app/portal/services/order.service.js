@@ -1,12 +1,12 @@
-const Order = require('../models/order.model');
-const productService = require('../services/product.service');
+const Order = require('../../../common/models/order.model');
+const productService = require('./product.service');
 const moment = require('moment');
-const {validateFQL, getMQL} = require('../../shared/fqlparser');
-const queryFilter = require('../../shared/utils/query-builder');
-const ClientError = require('../../shared/client-error');
+const {validateFQL, getMQL} = require('../../../common/shared/fqlparser');
+const queryFilter = require('../../../common/shared/utils/query-builder');
+const ClientError = require('../../../common/shared/client-error');
 const {StatusCodes} = require('http-status-codes');
-const { connectToRabbitMQ, sendToQueue } = require('../../shared/helpers/amqp');
-const {generateRandomUUID} = require('../../shared/utils/uuid');
+const { connectToRabbitMQ, sendToQueue } = require('../../../common/shared/helpers/amqp');
+const {generateRandomUUID} = require('../../../common/shared/utils/uuid');
 
 module.exports = {
     placeOrder,

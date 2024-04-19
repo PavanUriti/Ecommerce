@@ -3,10 +3,10 @@
 require('dotenv').config();
 
 const express = require('express');
-const authenticate = require('./auth/authenticate');
-const initApp = require('./startup/init');
-const setupRoutes = require('./startup/server.routes');
-const errorHandler = require('./middleware/errorhandler');
+const authenticate = require('../../common/auth/authenticate');
+const initApp = require('../../common/startup/init');
+const setupRoutes = require('./server.routes');
+const errorHandler = require('../../common/middleware/errorhandler');
 
 const app = express();
 const PORT = process.env.PORT || 3000;

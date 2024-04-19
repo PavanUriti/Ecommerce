@@ -1,6 +1,6 @@
 const Joi = require('joi');
-const nameRegex =require('../../shared/regular-expression').NAME;
-const phoneRegex =require('../../shared/regular-expression').PHONE;
+const nameRegex =require('../../../common/shared/regular-expression').NAME;
+const phoneRegex =require('../../../common/shared/regular-expression').PHONE;
 
 module.exports = {
     validateRegistration,
