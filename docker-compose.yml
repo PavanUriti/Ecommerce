@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+  portal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: node-app
+    ports:
+      - '3000:3000'
+    restart: always
+    env_file:
+      - .env 
+    depends_on:
+      - mongo
+      - rabbitmq
+
+  mongo:
+    image: "mongo:4.4.29"
+    logging:
+      driver: none
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo:/data/db
+
+  rabbitmq:
+    image: "rabbitmq:3.13.1-management" 
+    logging:
+      driver: none
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq 
+
+volumes:
+  mongo:
+  rabbitmq:
