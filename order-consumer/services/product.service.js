@@ -1,4 +1,4 @@
-const Product = require('../../../common/models/product.model');
+const Product = require('../../common/models/product.model');
 
 module.exports = {
     getProductById,

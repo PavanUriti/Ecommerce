@@ -1,11 +1,11 @@
-const Product = require('../../../common/models/product.model');
+const Product = require('../../common/models/product.model');
 const moment = require('moment');
-const {validateFQL, getMQL} = require('../../../common/shared/fqlparser');
-const queryFilter = require('../../../common/shared/utils/query-builder');
-const ClientError = require('../../../common/shared/client-error');
+const {validateFQL, getMQL} = require('../../common/shared/fqlparser');
+const queryFilter = require('../../common/shared/utils/query-builder');
+const ClientError = require('../../common/shared/client-error');
 const {StatusCodes} = require('http-status-codes');
-const {uploadImage} = require('../../../common/shared/helpers/cloudinary');
-const {createTempFile, deleteFile} = require('../../../common/shared/utils/file-operations');
+const {uploadImage} = require('../../common/shared/helpers/cloudinary');
+const {createTempFile, deleteFile} = require('../../common/shared/utils/file-operations');
 
 module.exports = {
     addProduct,

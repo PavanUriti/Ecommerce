@@ -1,6 +1,6 @@
-const User = require('../../../common/models/user.model');
-const {generateRandomUUID} = require('../../../common/shared/utils/uuid');
-const tokenService = require('../../../common/shared/jwt/token');
+const User = require('../../common/models/user.model');
+const {generateRandomUUID} = require('../../common/shared/utils/uuid');
+const tokenService = require('../../common/shared/jwt/token');
 const moment = require('moment');
 
 module.exports = {

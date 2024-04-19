@@ -1,6 +1,6 @@
 const express = require('express');
 const productController = require('../controllers/product.controller');
-const {sellerOnly} = require('../../../common/auth/authorization');
+const {sellerOnly} = require('../../common/auth/authorization');
 
 const productRouter = express.Router();
 module.exports = productRouter;

@@ -1,6 +1,6 @@
-const Product = require('../../../common/models/product.model');
-const {uploadImage} = require('../../../common/shared/helpers/cloudinary');
-const { consumeFromQueue } = require('../../../common/shared/helpers/amqp');
+const Product = require('../../common/models/product.model');
+const {uploadImage} = require('../../common/shared/helpers/cloudinary');
+const { consumeFromQueue } = require('../../common/shared/helpers/amqp');
 
 module.exports = {
   startConsumer,

@@ -1,7 +1,7 @@
-const Order = require('../../../common/models/order.model');
+const Order = require('../../common/models/order.model');
 const productService = require('./product.service');
-const { sendToQueue, consumeFromQueue } = require('../../../common/shared/helpers/amqp');
-const {generateRandomUUID} = require('../../../common/shared/utils/uuid');
+const { sendToQueue, consumeFromQueue } = require('../../common/shared/helpers/amqp');
+const {generateRandomUUID} = require('../../common/shared/utils/uuid');
 
 module.exports = {
     startOrderConsumer
