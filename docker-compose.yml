@@ -4,13 +4,59 @@ services:
   portal:
     build:
       context: .
+      args:
+        - service_src=./portal
       dockerfile: Dockerfile
-    container_name: node-app
+    container_name: portal-service
     ports:
       - '3000:3000'
     restart: always
     env_file:
-      - .env 
+      - ./portal/.env 
+    volumes:
+      - ./portal:/usr/src/app/service:cached
+      - ./common:/usr/src/app/common:cached
+      - temp_files:/usr/src/app/temp_files
+    depends_on:
+      - mongo
+      - rabbitmq
+
+  product-consumer:
+    build:
+      context: .
+      args:
+        - service_src=./product-consumer
+      dockerfile: Dockerfile
+    container_name: product-consumer-service
+    ports:
+      - '3010:3010'
+    restart: always
+    env_file:
+      - ./product-consumer/.env 
+    volumes:
+      - ./product-consumer:/usr/src/app/service:cached
+      - ./common:/usr/src/app/common:cached
+      - temp_files:/usr/src/app/temp_files
+    depends_on:
+      - mongo
+      - rabbitmq
+
+  order-consumer:
+    build:
+      context: .
+      args:
+        - service_src=./order-consumer
+      dockerfile: Dockerfile
+    container_name: order-consumer-service
+    ports:
+      - '3020:3020'
+    restart: always
+    env_file:
+      - ./order-consumer/.env 
+    volumes:
+      - ./order-consumer:/usr/src/app/service:cached
+      - ./common:/usr/src/app/common:cached
+      - temp_files:/usr/src/app/temp_files
     depends_on:
       - mongo
       - rabbitmq
@@ -37,3 +83,4 @@ services:
 volumes:
   mongo:
   rabbitmq:
+  temp_files:

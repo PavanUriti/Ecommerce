@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const {generateRandomUUID} = require('./uuid');
 
-const tempDir = '/tmp/attachments';
+const tempDir = '/usr/src/app/temp_files';
 
 async function createTempFile(fileName, fileData) {
 

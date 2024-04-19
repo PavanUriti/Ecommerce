@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "postinstall": "",
-    "start": "nodemon index.js --trace-sync-io --host 0.0.0.0",
-    "debug": "nodemon --inspect index.js"
+    "start": "node ./service/index.js --trace-sync-io --host 0.0.0.0",
+    "debug": "node --inspect ./service/index.js"
   },
   "author": "",
   "license": "ISC",
