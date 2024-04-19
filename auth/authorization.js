@@ -27,7 +27,6 @@ async function sellerOnly(req, res, next) {
  * @param {*} next 
  */
 async function customerOnly(req, res, next) {
-    console.log(req.user.role)
     if (req.user.role == 'seller') {
         next( new ClientError(StatusCodes.BAD_REQUEST, 'Seller not allowed to acccess this resource'));
     } else if (req.user.role == 'customer') {
