@@ -89,7 +89,7 @@ async function getProductById(id) {
       const result = await Product.findById(id).lean();
       return result;
     } catch (error) {
-      throw new Error(`Error adding details to database: ${error.message}`);
+      throw new Error(`Error getting details from database: ${error.message}`);
     }
 }
 

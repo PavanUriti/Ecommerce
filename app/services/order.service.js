@@ -10,9 +10,14 @@ const {generateRandomUUID} = require('../../shared/utils/uuid');
 
 module.exports = {
     placeOrder,
+    getOrderById,
     performInventoryCheck,
     updateOrderStatus,
     markOrderAsShipped,
+    getMatchQuery,
+    getAllOrders,
+    getAllOrdersCount,
+    getOrderDetails,
 }
 
 /**
@@ -31,6 +36,20 @@ async function placeOrder(data) {
         console.log('Order placed successfully and added to inventory check queue:', result._id.toString());
     } catch (error) {
         throw new Error('Failed to place order', error);
+    }
+}
+
+/**
+ * 
+ * @param {*} id
+ * @returns 
+ */
+async function getOrderById(id) {
+    try {
+      const result = await Order.findById(id).lean();
+      return result;
+    } catch (error) {
+      throw new Error(`Error getting details from database: ${error.message}`);
     }
 }
 
@@ -70,6 +89,7 @@ async function performInventoryCheck(orderId) {
 
         return true; 
     } catch (error) {
+        await updateOrderStatus(orderId, 'Cancelled');
         throw new Error('Failed to perform inventory check', error);
     }
 }
@@ -97,5 +117,140 @@ async function markOrderAsShipped(id) {
         await updateOrderStatus(id, 'Shipped');
     } catch (error) {
         throw new Error('Failed to update status', error);
+    }
+}
+
+/**
+ * 
+ * @param {*} searchTerm
+ * @param {*} filters 
+ * @return {*} Match Query
+ */
+async function getMatchQuery( searchTerm, filters=[]) {
+    const filterArray = [];
+    let object;
+    if (!validateFQL(filters)) {
+        throw new ClientError(StatusCodes.BAD_REQUEST, 'Invalid Filter Query');
+    }
+
+    for (let i = 0; i < filters.length; i++) {
+        object = filters[i];
+        const itemType = typeof (filters[i]);
+        if (itemType == 'object') {
+            switch (object.key) {
+            case 'status':
+                object = await getStatusQuery(object);
+                break;
+            }
+        }
+        filterArray.push(object);
+    }
+    const matchQuery = getMQL(filterArray);
+
+    if (searchTerm) {
+        const escapedSearchTerm = queryFilter.escapeSplChars(searchTerm);
+        const searchTermRegex = new RegExp(escapedSearchTerm, 'i');
+        matchQuery['$expr'] = {'$regexMatch': {'input': '$products.name', 'regex': searchTermRegex}};
+    }
+    return matchQuery;
+};
+
+/**
+ * 
+ * @param {*} filterObject 
+ */
+async function getStatusQuery(filterObject) {
+    await isValidCondition(filterObject);
+
+    let statusQuery;
+    let values;
+
+    if (typeof filterObject.value == 'string') {
+        values = [filterObject.value];
+    } else {
+        values = filterObject.value.slice();
+    }
+
+    if (filterObject.condition.toLowerCase() == 'equal') {
+        statusQuery = {'status': {'$in': values}};
+    } else {
+        statusQuery = {'status': {'$nin': values}};
+    }
+ 
+    return statusQuery;
+};
+
+/**
+ * 
+ * @param {*} filterObject 
+ */
+async function isValidCondition(filterObject) {
+    if (filterObject.condition.toLowerCase() !== 'equal' && filterObject.condition.toLowerCase() !== 'not equal') {
+        throw new ClientError(400, 'Invalid Condition');
+    }
+}
+
+/**
+ * 
+ * @param {*} matchQuery 
+ * @param {*} pageSize 
+ * @param {*} pageIndex 
+ * @param {*} sortParam 
+ */
+async function getAllOrders(idQuery, matchQuery, pageSize, pageIndex, sortParam) {
+    const skipRecords = (pageSize * pageIndex) - pageSize;
+
+    const result = await Order.aggregate([
+        {$match: idQuery},
+        {$unwind: {
+            path: '$products',
+            preserveNullAndEmptyArrays: false,
+        }},
+        {$match: matchQuery},
+        {$sort: sortParam},
+        {$skip: skipRecords},
+        {$limit: pageSize},
+        {$project: {
+            '_id': 0,
+            'id': '$_id',
+            'productId':'$products.product',
+            'name': '$products.name',
+            'thumbnail' : '$products.url',
+            'status': '$status',
+        }},
+    ]).allowDiskUse(true);
+    
+    return result.length>0?result:[];
+};
+
+/**
+ * 
+ * @param {*} matchQuery 
+ */
+async function getAllOrdersCount(idQuery, matchQuery) {
+    const result = await Order.aggregate([
+        {$match: idQuery},
+        {$unwind: {
+            path: '$products',
+            preserveNullAndEmptyArrays: false,
+        }},
+        {$match: matchQuery},
+        {$group: {'_id': null, 'count': {$sum: 1}}},
+    ]).allowDiskUse(true);
+    
+    return result.length>0?result[0].count:0;
+};
+
+/**
+ * 
+ * @param {*} id 
+ * @returns 
+ */
+async function getOrderDetails(id) {
+    try {
+      const result = await Order.findById(id).lean();
+      return result;
+    } catch (error) {
+      throw new Error(`Error adding details to database: ${error.message}`);
     }
 }

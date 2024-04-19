@@ -232,7 +232,7 @@ async function isSellerOfProduct(req, res, next) {
         if (!product ) {
             throw new ClientError(StatusCodes.BAD_REQUEST, 'Product does not exist');
         }
-        console.log(product.user, userId)
+
         if (product.user.toString() !==  userId) {
             throw new ClientError(StatusCodes.BAD_REQUEST, 'Not the seller');
         }
