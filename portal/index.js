@@ -15,6 +15,7 @@ async function startServer() {
     try {
         await initApp(app);
         app.use(await authenticate);
+        app.use(require('../common/middleware/ratelimiter').rateLimitMiddleware);
         await setupRoutes(app);
         app.use(errorHandler);
 

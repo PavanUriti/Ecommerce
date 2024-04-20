@@ -20,6 +20,9 @@ services:
     depends_on:
       - mongo
       - rabbitmq
+      - redis
+    networks:
+      - appnet
 
   product-consumer:
     build:
@@ -40,6 +43,9 @@ services:
     depends_on:
       - mongo
       - rabbitmq
+      - redis
+    networks:
+      - appnet
 
   order-consumer:
     build:
@@ -60,6 +66,9 @@ services:
     depends_on:
       - mongo
       - rabbitmq
+      - redis
+    networks:
+      - appnet
 
   mongo:
     image: "mongo:4.4.29"
@@ -69,6 +78,8 @@ services:
       - 27017:27017
     volumes:
       - mongo:/data/db
+    networks:
+      - appnet
 
   rabbitmq:
     image: "rabbitmq:3.13.1-management" 
@@ -78,9 +89,19 @@ services:
       - "5672:5672"
       - "15672:15672"
     volumes:
-      - rabbitmq:/var/lib/rabbitmq 
+      - rabbitmq:/var/lib/rabbitmq
+    networks:
+      - appnet
 
+  redis:
+    image: "redis:6.2.6"
+    networks:
+      - appnet
 volumes:
   mongo:
   rabbitmq:
   temp_files:
+
+networks:
+  appnet:
+    driver: bridge

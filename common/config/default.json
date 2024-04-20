@@ -1,5 +1,6 @@
 {
-  "mongobaseUrlString": "mongodb://mongo:27017/{tenantName}",
-  "amqpUrlString": "amqp://guest:guest@rabbitmq:5672/"
+  "mongobaseUrlString": "mongodb://mongo:27017/{database}",
+  "amqpUrlString": "amqp://guest:guest@rabbitmq:5672/",
+  "redisUrl": "redis://redis:6379"
 }
   
