@@ -61,3 +61,5 @@ This project focuses on building a microservices-based system for a simple e-com
 
 For detailed instructions on deploying the microservices system using Docker Swarm, you can refer to this guide:
 [Deploying Application using Docker Swarm](https://medium.com/@sushantkapare1717/deploying-application-using-docker-swarm-5b761a61aa48)
+
+Attaching Postman Collection APIs. [Ecommerce.postman_collection.json](https://github.com/PavanUriti/Ecommerce/files/15049387/Ecommerce.postman_collection.json)
