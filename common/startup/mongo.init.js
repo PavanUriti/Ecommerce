@@ -11,7 +11,7 @@ const options = {
 
 module.exports = async function() {
     let radarConnection = baseConnectionString;
-    radarConnection =radarConnection.replace('{tenantName}', DATABASE);
+    radarConnection =radarConnection.replace('{database}', DATABASE);
     try {
         await mongoose.connect(radarConnection, options);
         console.info('Connected to MongoDB');
