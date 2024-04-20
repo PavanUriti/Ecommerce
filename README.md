@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This assignment focuses on building a microservices-based system for a simple e-commerce application using Node.js, MongoDB, RabbitMQ, Redis, and Cloudinary. The system will handle user authentication, product management, and order processing, with a strong emphasis on concurrency control, high availability and rate limiting.
+This project focuses on building a microservices-based system for a simple e-commerce application using Node.js, MongoDB, RabbitMQ, Redis, and Cloudinary. The system will handle user authentication, product management, and order processing, with a strong emphasis on concurrency control, high availability and rate limiting.
 
 ## Microservices Architecture
 
