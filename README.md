@@ -13,6 +13,7 @@ This assignment focuses on building a microservices-based system for a simple e-
 - Uses Express.js for building RESTful APIs.
 - Utilizes JSON Web Tokens (JWT) for authentication and role-based access control (RBAC).
 - Integrates rate limiting using Redis to prevent abuse and maintain system performance.
+- Implements concurrency control using queues and versioning to handle concurrent updates safely.
 
 ### Product-Consumer Microservice
 
@@ -55,3 +56,8 @@ This assignment focuses on building a microservices-based system for a simple e-
 3. Access the deployed services on the Swarm cluster.
 
 4. Remove the stack: docker stack rm <stack-name>
+
+## Reference for Deployment
+
+For detailed instructions on deploying the microservices system using Docker Swarm, you can refer to this guide:
+[Deploying Application using Docker Swarm](https://medium.com/@sushantkapare1717/deploying-application-using-docker-swarm-5b761a61aa48)
