@@ -1,0 +1,81 @@
+version: "3.8"
+
+services:
+  portal:
+    image: ecommerce-microservice-portal:latest
+    ports:
+      - '3000:3000'
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 3
+    environment:
+      NODE_ENV: production
+    networks:
+      - appnet
+
+  product-consumer:
+    image: ecommerce-microservice-product-consumer:latest
+    ports:
+      - '3010:3010'
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 3 
+    environment:
+      NODE_ENV: production
+    networks:
+      - appnet
+
+  order-consumer:
+    image: ecommerce-microservice-order-consumer:latest
+    ports:
+      - '3020:3020'
+    deploy:
+      restart_policy:
+        condition: any
+      replicas: 3 
+    environment:
+      NODE_ENV: production
+    networks:
+      - appnet
+
+  mongo:
+    image: "mongo:4.4.29"
+    deploy:
+      restart_policy:
+        condition: any
+    volumes:
+      - mongo:/data/db
+    networks:
+      - appnet
+
+  rabbitmq:
+    image: "rabbitmq:3.13.1-management"
+    deploy:
+      restart_policy:
+        condition: any
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    networks:
+      - appnet
+
+  redis:
+    image: "redis:6.2.6"
+    deploy:
+      restart_policy:
+        condition: any
+    networks:
+      - appnet
+
+volumes:
+  mongo:
+  rabbitmq:
+  temp_files:
+
+networks:
+  appnet:
+    driver: overlay
