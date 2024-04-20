@@ -9,11 +9,10 @@ let client;
  * 
  */
 async function init() {  
-    const options = ({
-        host: 'redis',
-        port: 6379,
-      });
-    client = await redis.createClient()
+    const options = {
+        url: config.redisUrl,
+    };
+    client = await redis.createClient(options)
     .on('error', err => console.log('Redis Client Error', err))
     .connect();
 
