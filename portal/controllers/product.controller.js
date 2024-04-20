@@ -7,6 +7,8 @@ const productService = require('../services/product.service');
 const {createTempFile, deleteFile} = require('../../common/shared/utils/file-operations');
 const Pagination = require('../../common/shared/pagination');
 const { connectToRabbitMQ, sendToQueue } = require('../../common/shared/helpers/amqp');
+const productValidator = require('../validators/product.validator');
+const mongoose = require('mongoose');
 
 const INVALID_REQUEST_BODY_FORMAT = 'Invalid Request Body Format';
 
@@ -17,6 +19,7 @@ module.exports = {
     getProductDetails,
     deleteProduct,
     isSellerOfProduct,
+    getSellerInventory,
 }
 
 /**
@@ -29,6 +32,11 @@ module.exports = {
 async function addProduct(req, res, next) {
     try {
         const { name, price, description, category, seller, stock } = req.body;
+
+        const {error} = productValidator.createProduct(req.body);
+        if (error) {
+            throw new ClientError(StatusCodes.BAD_REQUEST, INVALID_REQUEST_BODY_FORMAT, error.message);
+        }
 
         let images = [];
         if (req.files && req.files.attachments) {
@@ -74,6 +82,11 @@ async function editProduct(req, res, next) {
     try {
         const id = req.params.id;
         const { name, price, description, category, seller, stock , version} = req.body;
+
+        const {error} = productValidator.updateProduct(req.body);
+        if (error) {
+            throw new ClientError(StatusCodes.BAD_REQUEST, INVALID_REQUEST_BODY_FORMAT, error.message);
+        }
 
         const product = await productService.getProductById(id);
         if (!product) {
@@ -130,6 +143,11 @@ async function getAllProducts (req, res, next) {
     try {
         const reqBody = req.body;
         
+        const {error} = productValidator.validateGetAll(req.body);
+        if (error) {
+            throw new ClientError(StatusCodes.BAD_REQUEST, INVALID_REQUEST_BODY_FORMAT, error.message);
+        }
+
         const matchQuery = await productService.getMatchQuery(reqBody.searchTerm, reqBody.filters);
         
         let reqPaginationBody = req.body.pagination;
@@ -243,5 +261,58 @@ async function isSellerOfProduct(req, res, next) {
             return next(error);
         }
         next(new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'An error occurred while authorization.', error.message));
+    }
+}
+
+/**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ */
+async function getSellerInventory (req, res, next) {
+    try {
+        const reqBody = req.body;
+        const user = new mongoose.Types.ObjectId(req.user.userId);
+
+        const {error} = productValidator.validateGetAll(req.body);
+        if (error) {
+            throw new ClientError(StatusCodes.BAD_REQUEST, INVALID_REQUEST_BODY_FORMAT, error.message);
+        }
+
+        const matchQuery = await productService.getMatchQuery(reqBody.searchTerm, reqBody.filters);
+        
+        let reqPaginationBody = req.body.pagination;
+        if (!reqPaginationBody) {
+            reqPaginationBody = {
+                pageSize: 10,
+                pageIndex: 1,
+                sort: {
+                    column: 'updatedAt',
+                    direction: 'desc',
+                },
+            };
+        }
+        
+        const pageSize = reqPaginationBody.pageSize;
+        const pageIndex = reqPaginationBody.pageIndex;
+        const columnName = reqPaginationBody.sort.column;
+        const direction = reqPaginationBody.sort.direction;
+        const sortParam = {};
+
+        sortParam[columnName] = direction === 'desc' ? -1 : 1;
+            
+        const result = await productService.getAllProducts({user, ...matchQuery}, pageSize, pageIndex, sortParam);
+        
+        const count = await productService.getAllProductsCount({user, ...matchQuery});
+
+        const pagination = new Pagination(columnName, direction, count, pageSize, pageIndex);
+
+        return handleResponse(req, res, next, StatusCodes.OK, result, '', '', result.length> 0? pagination :null);
+    } catch (error) {
+        if (error instanceof ClientError) {
+            return next(error);
+        }
+        next(new ServerError(StatusCodes.INTERNAL_SERVER_ERROR, 'An error occurred while getting products.', error.message));
     }
 }

@@ -8,6 +8,7 @@ const {createTempFile, deleteFile} = require('../../common/shared/utils/file-ope
 const Pagination = require('../../common/shared/pagination');
 const { connectToRabbitMQ, sendToQueue } = require('../../common/shared/helpers/amqp');
 const mongoose = require('mongoose');
+const orderValidator = require('../validators/order.validator');
 
 const INVALID_REQUEST_BODY_FORMAT = 'Invalid Request Body Format';
 
@@ -33,6 +34,11 @@ async function placeOrder(req, res, next) {
         const data = {
             ...req.body, user: req.user.userId
         };
+
+        const {error} = orderValidator.createOrder(req.body);
+        if (error) {
+            throw new ClientError(StatusCodes.BAD_REQUEST, INVALID_REQUEST_BODY_FORMAT, error.message);
+        }
 
         const channel = await connectToRabbitMQ();
 
@@ -134,6 +140,11 @@ async function getAllOrders (req, res, next) {
     try {
         const reqBody = req.body;
         const user = new mongoose.Types.ObjectId(req.user.userId);
+
+        const {error} = orderValidator.validateGetAll(req.body);
+        if (error) {
+            throw new ClientError(StatusCodes.BAD_REQUEST, INVALID_REQUEST_BODY_FORMAT, error.message);
+        }
 
         const matchQuery = await orderService.getMatchQuery(reqBody.searchTerm, reqBody.filters);
         
