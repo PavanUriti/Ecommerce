@@ -1,0 +1,252 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: nginx-ingress-clusterrole
+  namespace: ecommerce
+rules:
+  - apiGroups: [""]
+    resources:
+      - configmaps
+      - endpoints
+      - nodes
+      - pods
+      - secrets
+      - events
+    verbs: ["get", "list", "watch"] 
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "update", "watch"]
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  - apiGroups: ["extensions", "networking.k8s.io"] 
+    resources: ["ingresses", "ingresses/status"]
+    verbs: ["get", "list", "watch", "update"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingressclasses"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources: ["endpointslices"]
+    verbs: ["get", "list", "watch"] 
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "create", "update"] 
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: nginx-ingress-role
+  namespace: ecommerce
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - pods
+      - secrets
+      - endpoints
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - services
+    verbs:
+      - get
+      - list
+      - update
+      - watch
+  - apiGroups:
+      - extensions
+      - networking.k8s.io # k8s 1.14+
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+      - networking.k8s.io # k8s 1.14+
+    resources:
+      - ingresses/status
+    verbs:
+      - update
+  - apiGroups:
+      - networking.k8s.io # k8s 1.14+
+    resources:
+      - ingressclasses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    resourceNames:
+      - ingress-controller-leader-nginx
+    verbs:
+      - get
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+    verbs:
+      - create
+  - apiGroups:
+      - ""
+    resources:
+      - endpoints
+    verbs:
+      - create
+      - get
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: nginx-ingress-controller-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: nginx-ingress-role
+subjects:
+  - kind: ServiceAccount
+    name: nginx-ingress-serviceaccount
+    namespace: ecommerce
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: nginx-ingress-controller-clusterrole-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: nginx-ingress-clusterrole
+subjects:
+  - kind: ServiceAccount
+    name: nginx-ingress-serviceaccount
+    namespace: ecommerce
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nginx-ingress-serviceaccount
+  namespace: ecommerce
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-ingress-controller
+spec:
+  selector:
+    matchLabels:
+      app: ingress-nginx
+  template:
+    metadata:
+      labels:
+        app: ingress-nginx
+    spec:
+      serviceAccountName: nginx-ingress-serviceaccount
+      containers:
+        - name: nginx-ingress-controller
+          image: registry.k8s.io/ingress-nginx/controller:v1.10.0@sha256:42b3f0e5d0846876b1791cd3afeb5f1cbbe4259d6f35651dcc1b5c980925379c
+          args:
+            - /nginx-ingress-controller
+            - --default-backend-service=ecommerce/portal-service
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            limits:
+              cpu: "0.5" 
+              memory: "512Mi"
+          ports:
+            - name: http
+              containerPort: 80
+            - name: https
+              containerPort: 443
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginx-ingress-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-ingress-controller
+  minReplicas: 1
+  maxReplicas: 5 
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-nginx
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 443
+    protocol: TCP
+  selector:
+    app: ingress-nginx
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: portal-ingress
+spec:
+  rules:
+    - host: localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: portal-service
+                port:
+                  number: 3000

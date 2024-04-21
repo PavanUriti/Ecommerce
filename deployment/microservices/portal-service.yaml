@@ -59,9 +59,14 @@ metadata:
   name: portal-service
 spec:
   selector:
-    app: portal
+    app: portal  
   ports:
-    - protocol: TCP
-      port: 3000
+    - name: http
+      port: 80
+      protocol: TCP
       targetPort: 3000
-  type: LoadBalancer  
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 3000
+  type: ClusterIP
