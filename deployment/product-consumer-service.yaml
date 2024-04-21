@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-consumer-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: product-consumer
+  template:
+    metadata:
+      labels:
+        app: product-consumer
+    spec:
+      containers:
+        - name: product-consumer-container
+          image: pavan5670/ecommerce-microservice-product-consumer
+          ports:
+            - containerPort: 3010
+          envFrom:
+            - secretRef:
+                name: secret
+          volumeMounts:
+            - name: shared-volume
+              mountPath: /usr/src/app/temp_files
+          resources:
+            limits:
+              cpu: "0.5" 
+              memory: "512Mi" 
+      volumes:
+        - name: shared-volume
+          persistentVolumeClaim:
+            claimName: shared-volume-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-consumer-service
+spec:
+  selector:
+    app: product-consumer
+  ports:
+    - protocol: TCP
+      port: 3010
+      targetPort: 3010
+  type: NodePort

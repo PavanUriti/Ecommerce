@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portal-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: portal
+  template:
+    metadata:
+      labels:
+        app: portal
+    spec:
+      containers:
+        - name: portal-container
+          image: pavan5670/ecommerce-microservice-portal
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: secret
+          volumeMounts:
+            - name: shared-volume
+              mountPath: /usr/src/app/temp_files
+          resources:
+            limits:
+              cpu: "0.5" 
+              memory: "512Mi"
+      volumes:
+        - name: shared-volume
+          persistentVolumeClaim:
+            claimName: shared-volume-claim
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: portal-service
+spec:
+  selector:
+    app: portal
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: LoadBalancer  
