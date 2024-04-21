@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This assignment focuses on building a microservices-based system for a simple e-commerce application using Node.js, MongoDB, RabbitMQ, Redis, and Cloudinary. The system will handle user authentication, product management, and order processing, with a strong emphasis on concurrency control, high availability and rate limiting.
+This project focuses on building a microservices-based system for a simple e-commerce application using Node.js, MongoDB, RabbitMQ, Redis, and Cloudinary. The system will handle user authentication, product management, and order processing, with a strong emphasis on concurrency control, high availability and rate limiting.
 
 ## Microservices Architecture
 
@@ -61,3 +61,5 @@ This assignment focuses on building a microservices-based system for a simple e-
 
 For detailed instructions on deploying the microservices system using Docker Swarm, you can refer to this guide:
 [Deploying Application using Docker Swarm](https://medium.com/@sushantkapare1717/deploying-application-using-docker-swarm-5b761a61aa48)
+
+Attaching Postman Collection APIs. [Ecommerce.postman_collection.json](https://github.com/PavanUriti/Ecommerce/files/15049387/Ecommerce.postman_collection.json)
