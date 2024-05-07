@@ -1,32 +1,32 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mongo-deployment
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: mongo
-  template:
-    metadata:
-      labels:
-        app: mongo
-    spec:
-      containers:
-        - name: mongo
-          image: mongo:4.4.29
-          ports:
-            - containerPort: 27017
-          volumeMounts:
-            - name: mongo-data
-              mountPath: /data/db
-          resources:
-            limits:
-              cpu: "1" 
-              memory: "1Gi" 
-      volumes:
-        - name: mongo-data
-          emptyDir: {}
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: mongo-deployment
+# spec:
+#   replicas: 3
+#   selector:
+#     matchLabels:
+#       app: mongo
+#   template:
+#     metadata:
+#       labels:
+#         app: mongo
+#     spec:
+#       containers:
+#         - name: mongo
+#           image: mongo:4.4.29
+#           ports:
+#             - containerPort: 27017
+#           volumeMounts:
+#             - name: mongo-data
+#               mountPath: /data/db
+#           resources:
+#             limits:
+#               cpu: "1"
+#               memory: "1Gi"
+#       volumes:
+#         - name: mongo-data
+#           emptyDir: {}
 
 ---
 apiVersion: v1
@@ -41,3 +41,43 @@ spec:
       port: 27017
       targetPort: 27017
   clusterIP: None
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongo
+spec:
+  serviceName: "mongo"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:4.4.29
+          command:
+            - mongod
+            - "--replSet"
+            - "rs0"
+          ports:
+            - containerPort: 27017
+          volumeMounts:
+            - name: mongo-pvc
+              mountPath: /data/db
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: "256Mi"
+  volumeClaimTemplates:
+    - metadata:
+        name: mongo-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 256Mi

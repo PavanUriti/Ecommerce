@@ -1,6 +1,5 @@
 {
-  "mongobaseUrlString": "mongodb://mongo:27017/{database}",
-  "amqpUrlString": "amqp://guest:guest@rabbitmq:5672/",
-  "redisUrl": "redis://redis:6379"
+  "mongobaseUrlString": "mongodb://mongo-0.mongo.ecommerce.svc.cluster.local:27017/{database}",
+  "amqpUrlString": "amqp://guest:guest@rabbitmq-0.rabbitmq.ecommerce.svc.cluster.local:5672/",
+  "redisUrl": "redis://redis-0.redis.ecommerce.svc.cluster.local:6379"
 }
-  

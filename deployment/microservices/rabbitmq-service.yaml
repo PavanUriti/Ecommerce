@@ -1,33 +1,33 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: rabbitmq-deployment
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: rabbitmq
-  template:
-    metadata:
-      labels:
-        app: rabbitmq
-    spec:
-      containers:
-        - name: rabbitmq
-          image: rabbitmq:3.13.1-management
-          ports:
-            - containerPort: 5672
-            - containerPort: 15672
-          volumeMounts:
-            - name: rabbitmq-data
-              mountPath: /var/lib/rabbitmq
-          resources:
-            limits:
-              cpu: "1"
-              memory: "1Gi"
-      volumes:
-        - name: rabbitmq-data
-          emptyDir: {}
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: rabbitmq-deployment
+# spec:
+#   replicas: 3
+#   selector:
+#     matchLabels:
+#       app: rabbitmq
+#   template:
+#     metadata:
+#       labels:
+#         app: rabbitmq
+#     spec:
+#       containers:
+#         - name: rabbitmq
+#           image: rabbitmq:3.13.1-management
+#           ports:
+#             - containerPort: 5672
+#             - containerPort: 15672
+#           volumeMounts:
+#             - name: rabbitmq-data
+#               mountPath: /var/lib/rabbitmq
+#           resources:
+#             limits:
+#               cpu: "1"
+#               memory: "1Gi"
+#       volumes:
+#         - name: rabbitmq-data
+#           emptyDir: {}
 
 ---
 apiVersion: v1
@@ -48,3 +48,40 @@ spec:
       targetPort: 15672
   type: NodePort
 
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: rabbitmq
+spec:
+  serviceName: "rabbitmq"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbitmq
+  template:
+    metadata:
+      labels:
+        app: rabbitmq
+    spec:
+      containers:
+        - name: rabbitmq
+          image: rabbitmq:3.13.1-management
+          ports:
+            - containerPort: 5672
+            - containerPort: 15672
+          volumeMounts:
+            - name: rabbitmq-pvc
+              mountPath: /var/lib/rabbitmq
+          resources:
+            limits:
+              cpu: "0.5"
+              memory: "256Mi"
+  volumeClaimTemplates:
+    - metadata:
+        name: rabbitmq-pvc
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 256Mi
